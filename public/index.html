@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>North Woods Menu</title>
+    <style>
+      :root {
+        --bg: #f5f5f1;
+        --card: #ffffff;
+        --text: #1d1d1d;
+        --muted: #5c5c5c;
+        --line: #e5e1d8;
+        --accent: #163a5c;
+        --soft: #ecf3fb;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
+      body { min-height: 100vh; }
+      .page { max-width: 1000px; margin: 0 auto; padding: 32px 18px 48px; }
+      h1 { margin: 0 0 18px; font-size: clamp(1.9rem, 3vw, 2.7rem); }
+      .layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 18px 18px 14px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      }
+      .meal { margin-top: 0; font-size: 1.05rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+      .day { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+      .day:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+      .day h3 { margin: 0 0 10px; font-size: 1rem; }
+      .section { margin: 0 0 12px; }
+      .section h4 { margin: 0 0 6px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+      .section ul { margin: 0; padding-left: 1.1rem; }
+      .section li { margin: 0 0 4px; line-height: 1.35; }
+      .empty { color: var(--muted); font-style: italic; }
+      .status { margin: 0 0 20px; color: var(--muted); }
+      .loading { font-size: 0.95rem; color: var(--muted); }
+      @media (max-width: 640px) { .page { padding: 22px 14px 36px; } }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <h1>North Woods Menu</h1>
+      <div id="status" class="status">Loading menu…</div>
+      <div id="menu" class="layout"></div>
+    </main>
+
+    <script>
+      async function loadMenu() {
+        const statusEl = document.getElementById('status');
+        const menuEl = document.getElementById('menu');
+
+        try {
+          const response = await fetch('/api/menu');
+          const payload = await response.json();
+
+          if (!response.ok) {
+            throw new Error(payload.message || 'Unable to load menu');
+          }
+
+          const meals = payload.meals || [];
+          if (!meals.length) {
+            menuEl.innerHTML = '<div class="empty">No menu data available.</div>';
+            statusEl.textContent = 'No menu data available.';
+            return;
+          }
+
+          const html = meals.map((meal) => {
+            const days = (meal.days || []).map((day) => {
+              const sections = (day.sections || []).map((section) => {
+                const items = (section.items || []).map((item) => `<li>${item}</li>`).join('');
+                return `
+                  <div class="section">
+                    <h4>${section.title}</h4>
+                    <ul>${items}</ul>
+                  </div>
+                `;
+              }).join('');
+
+              return `
+                <div class="day">
+                  <h3>${new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</h3>
+                  ${sections || '<div class="empty">No items listed.</div>'}
+                </div>
+              `;
+            }).join('');
+
+            return `
+              <section class="panel">
+                <h2 class="meal">${meal.label}</h2>
+                ${days || '<div class="empty">No data for this meal.</div>'}
+              </section>
+            `;
+          }).join('');
+
+          menuEl.innerHTML = html;
+          statusEl.textContent = 'Updated for today.';
+        } catch (error) {
+          statusEl.textContent = 'Menu unavailable right now.';
+          menuEl.innerHTML = '<div class="empty">Please try again in a few minutes.</div>';
+          console.error(error);
+        }
+      }
+
+      loadMenu();
+    </script>
+  </body>
+</html>

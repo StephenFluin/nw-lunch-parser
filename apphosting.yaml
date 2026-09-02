@@ -1,0 +1,16 @@
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+build:
+  steps:
+    - name: node
+      script: npm ci
+    - name: node
+      script: npm run build
+
+run:
+  command: npm run start
