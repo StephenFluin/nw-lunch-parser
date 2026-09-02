@@ -26,13 +26,18 @@ app.use(express.static('public'));
 
 app.get('/api/menu', async (_req, res) => {
   const today = new Date();
+  const mondayOfThisWeek = new Date(today);
+  const mondayOffset = (mondayOfThisWeek.getDay() + 6) % 7;
+  mondayOfThisWeek.setDate(mondayOfThisWeek.getDate() - mondayOffset);
+  mondayOfThisWeek.setHours(0, 0, 0, 0);
+
   const maxDate = new Date(today);
   maxDate.setDate(today.getDate() + maxDaysAhead);
 
   const results = await Promise.all(
     Object.entries(mealConfig).map(async ([key, config]) => {
       const payloads: Array<{ days?: ApiDay[] | null }> = [];
-      let cursor = new Date(today);
+      let cursor = new Date(mondayOfThisWeek);
 
       while (cursor <= maxDate) {
         const year = cursor.getFullYear();

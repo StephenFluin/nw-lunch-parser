@@ -41,7 +41,6 @@ export function mergeMenuDays(
       if (!day.date) continue;
       const parsedDate = new Date(`${day.date}T12:00:00Z`);
       if (Number.isNaN(parsedDate.getTime())) continue;
-      if (parsedDate < startOfDay(referenceDate)) continue;
       if (parsedDate > startOfDay(maxDate)) continue;
       uniqueDays.set(day.date, day);
     }

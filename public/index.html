@@ -194,16 +194,18 @@
           }
 
           const orderedDays = [...dayMap.values()].sort((a, b) => new Date(a.date) - new Date(b.date));
-          const firstDate = new Date(orderedDays[0].date);
-          const lastDate = new Date(orderedDays[orderedDays.length - 1].date);
+          const firstDate = orderedDays.length ? new Date(orderedDays[0].date) : new Date();
+          const lastDate = orderedDays.length ? new Date(orderedDays[orderedDays.length - 1].date) : new Date();
 
-          const gridStart = new Date(firstDate);
-          const firstDayOffset = (gridStart.getDay() + 6) % 7;
-          gridStart.setDate(gridStart.getDate() - firstDayOffset);
+          const thisMonday = new Date();
+          const mondayOffset = (thisMonday.getDay() + 6) % 7;
+          thisMonday.setDate(thisMonday.getDate() - mondayOffset);
+          thisMonday.setHours(0, 0, 0, 0);
 
+          const gridStart = new Date(thisMonday);
           const gridEnd = new Date(lastDate);
-          const lastDayOffset = (7 - ((gridEnd.getDay() + 6) % 7 + 1)) % 7;
-          gridEnd.setDate(gridEnd.getDate() + lastDayOffset);
+          const lastWeekdayOffset = (7 - ((gridEnd.getDay() + 6) % 7 + 1)) % 7;
+          gridEnd.setDate(gridEnd.getDate() + lastWeekdayOffset);
 
           const totalDays = Math.round((gridEnd - gridStart) / 86400000) + 1;
           const calendarDays = [];

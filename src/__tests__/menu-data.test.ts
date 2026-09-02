@@ -44,10 +44,10 @@ describe('normalizeMenuResponse', () => {
     ]);
   });
 
-  it('excludes days before today', () => {
-    const today = new Date('2026-09-01T12:00:00Z');
+  it('keeps days before today when data exists', () => {
+    const today = new Date('2026-09-02T12:00:00Z');
     const result = normalizeMenuResponse(sampleResponse, today);
-    expect(result.map((day) => day.date.toISOString().slice(0, 10))).toEqual(['2026-09-01']);
+    expect(result.map((day) => day.date.toISOString().slice(0, 10))).toEqual(['2026-08-31', '2026-09-01']);
   });
 
   it('keeps only dates within the selected horizon', () => {

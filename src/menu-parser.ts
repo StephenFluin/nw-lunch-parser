@@ -16,7 +16,7 @@ export function parseNutrislicePageHtml(html: string, referenceDate: Date = new 
     const dateText = match[0].trim();
     const date = parseFriendlyDate(dateText);
 
-    if (!date || date < startOfDay(referenceDate)) {
+    if (!date) {
       continue;
     }
 
