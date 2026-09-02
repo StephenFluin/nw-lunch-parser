@@ -21,24 +21,38 @@ type NutrisliceDay = {
   menu_items?: NutrisliceMenuItem[] | null;
 };
 
-export function normalizeMenuResponse(payload: { days?: NutrisliceDay[] | null }, referenceDate: Date = new Date()): MenuDay[] {
-  const days = payload.days ?? [];
+export function normalizeMenuResponse(
+  payload: { days?: NutrisliceDay[] | null },
+  referenceDate: Date = new Date(),
+  maxDate: Date = addDays(referenceDate, 14),
+): MenuDay[] {
+  return mergeMenuDays([payload], referenceDate, maxDate);
+}
+
+export function mergeMenuDays(
+  payloads: Array<{ days?: NutrisliceDay[] | null }>,
+  referenceDate: Date = new Date(),
+  maxDate: Date = addDays(referenceDate, 14),
+): MenuDay[] {
+  const uniqueDays = new Map<string, NutrisliceDay>();
+
+  for (const payload of payloads) {
+    for (const day of payload.days ?? []) {
+      if (!day.date) continue;
+      const parsedDate = new Date(`${day.date}T12:00:00Z`);
+      if (Number.isNaN(parsedDate.getTime())) continue;
+      if (parsedDate < startOfDay(referenceDate)) continue;
+      if (parsedDate > startOfDay(maxDate)) continue;
+      uniqueDays.set(day.date, day);
+    }
+  }
+
   const result: MenuDay[] = [];
-
-  for (const day of days) {
-    if (!day.date) continue;
-
-    const parsedDate = new Date(`${day.date}T12:00:00Z`);
-    if (Number.isNaN(parsedDate.getTime())) continue;
-    if (parsedDate < startOfDay(referenceDate)) continue;
-
+  for (const day of uniqueDays.values()) {
     const sections = groupMenuItems(day.menu_items ?? []);
     if (sections.length === 0) continue;
-
-    result.push({
-      date: parsedDate,
-      sections,
-    });
+    const parsedDate = new Date(`${day.date}T12:00:00Z`);
+    result.push({ date: parsedDate, sections });
   }
 
   return result.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -87,5 +101,11 @@ function groupMenuItems(items: NutrisliceMenuItem[]): MenuSection[] {
 function startOfDay(date: Date): Date {
   const next = new Date(date);
   next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
   return next;
 }
